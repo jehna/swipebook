@@ -1,158 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Facebook Login JavaScript Example</title>
-    <meta charset="UTF-8">
-    <script src="js/jquery-2.1.1.min.js"></script>
-    <script src="js/handlebars-v1.3.0.js"></script>
-    <link rel="stylesheet" href="css/style.css" />
-    <meta name="viewport" content="width=device-width, inital-scale=1, maximum-scale=1, minimum-scale=1">
-</head>
-<body>
-<script>
-  
-    window.fbAsyncInit = function() {
-        FB.init({
-          appId      : '816021041756653',
-          cookie     : true,  // enable cookies to allow the server to access 
-                              // the session
-          xfbml      : true,  // parse social plugins on this page
-          version    : 'v2.0' // use version 2.0
-        });
-        
-        var tryLogin = setInterval(function() {
-            FB.getLoginStatus(function(response) {
-                if (response.status === 'connected') {
-                    j.SwipeBook.run();
-                    clearInterval(tryLogin);
-                }
-            });
-        }, 1000);
-    };
-    
-    var j = {};
-    
-    $(function() {
-        j.SwipeBook = (function() {
-            
-            var templates = ["status",
-                             "photo",
-                             "link"];
-            
-            function SwipeBook() {
-                j.templates = {};
-                templates.forEach(function(templateName) {
-                    j.templates[templateName] = Handlebars.compile($("#template-" + templateName).html());
-                });
-            }
-            
-            SwipeBook.prototype.run = function() {
-                FB.api('/me/home', 'get', {}, function(response) {
-                    response.data.forEach(function(entry) {
-                        console.log(entry);
-                        if( !j.templates[entry.type] ) return console.log(entry.type);
-                        
-                        var $template = $("<div />").html(j.templates[entry.type](entry)).appendTo($("#feed")).addClass("composite");
-                        
-                        // Set dragging
-                        var dragStart = 0;
-                        var winWidth = $(window).width();
-                        var lastPoint = 0;
-                        var prevented = false;
-                        $template.on("touchstart", function(e) {({})
-                            prevented = false;
-                            dragStart = e.originalEvent.touches[0].clientX;
-                            $template.removeClass("animateSwipe");
-                        });
-                        $template.on("touchmove", function(e) {
-                            var currPoint = e.originalEvent.touches[0].clientX;
-                            var diff = currPoint - dragStart;
-                            var diffPercent = Math.max(-1,Math.min(1, diff/(winWidth/2)));
-                            lastPoint = diffPercent;
-                            
-                            if(Math.abs(diffPercent) > 0.1 || prevented) {
-                                e.preventDefault();
-                                prevented = true;
-                            } else if(!prevented) {
-                                return;
-                            }
-                            
-                            $template.css({
-                                "-webkit-transform": "rotateZ("+(diffPercent * 45)+"deg)",
-                                "opacity": 1-Math.abs(diffPercent)
-                            });
-                        });
-                        $template.on("touchend", function(e) {
-                            $template.addClass("animateSwipe");
-                            
-                            if(Math.abs(lastPoint) > 0.55) {
-                                var deg = lastPoint > 0 ? 90 : -90;
-                                $template.slideUp();
-                                $template.css({
-                                    "-webkit-transform": "rotateZ("+deg+"deg)",
-                                    "opacity": "0%"
-                                });
-                            } else {
-                                $template.removeAttr("style");
-                            }
-                        });
-                        
-                        // Grab additional parameters
-                        /*if(entry.type == "photo") {
-                            FB.api(entry.object_id, 'get', {}, function(data) {
-                                entry.postfetch = data;
-                                $template.html( j.templates[entry.type](entry) );
-                            });
-                        }*/
-                    });
-                });
-            }
-            
-            return new SwipeBook();
-            
-        })();
-        
-        j.Login = function() {
-            FB.login(null, {
-                scope: 'read_stream', 
-                return_scopes: true
-            });
-        }
-    });
-    
-</script>
-
-
-<input type="button" value="Login" onclick="j.Login(fbAsyncInit);">
-<input type="button" value="Logout" onclick="FB.logout();">
-
-
-
-
-<div id="feed">
-    
-</div>
-
-
-
-
-
-
-
-<!-- Load FBAPI -->
-<script>
-  (function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) return;
-    js = d.createElement(s); js.id = id;
-    js.src = "http://connect.facebook.net/en_US/sdk.js";
-    fjs.parentNode.insertBefore(js, fjs);
-  }(document, 'script', 'facebook-jssdk'));
-</script>
-
-
-<script id="template-status" type="text/x-handlebars-template">
-    {{#if message}}
+<!DOCTYPE html><html><head><title>Swipebook</title><meta charset="UTF-8"><script src="/js/jquery-2.1.1.min.js"></script><script src="/js/handlebars-v1.3.0.js"></script><link rel="stylesheet" href="/css/style.css"><meta name="viewport" content="width=device-width,inital-scale=1,maximum-scale=1,minimum-scale=1"></head><body><script>window.fbAsyncInit=function(){FB.init({appId:"816021041756653",cookie:!0,xfbml:!0,version:"v2.0"});var t=setInterval(function(){FB.getLoginStatus(function(e){"connected"===e.status&&(j.SwipeBook.run(),clearInterval(t))})},1e3)};var j={};$(function(){j.SwipeBook=function(){function t(){j.templates={},e.forEach(function(t){j.templates[t]=Handlebars.compile($("#template-"+t).html())})}var e=["status","photo","link"];return t.prototype.run=function(){FB.api("/me/home","get",{},function(t){t.data.forEach(function(t){if(console.log(t),!j.templates[t.type])return console.log(t.type);var e=$("<div />").html(j.templates[t.type](t)).appendTo($("#feed")).addClass("composite"),n=0,o=$(window).width(),a=0,i=!1;e.on("touchstart",function(t){i=!1,n=t.originalEvent.touches[0].clientX,e.removeClass("animateSwipe")}),e.on("touchmove",function(t){var s=t.originalEvent.touches[0].clientX,r=s-n,c=Math.max(-1,Math.min(1,r/(o/2)));if(a=c,Math.abs(c)>.1||i)t.preventDefault(),i=!0;else if(!i)return;e.css({"-webkit-transform":"rotateZ("+45*c+"deg)",opacity:1-Math.abs(c)})}),e.on("touchend",function(){if(e.addClass("animateSwipe"),Math.abs(a)>.55){var t=a>0?90:-90;e.slideUp(),e.css({"-webkit-transform":"rotateZ("+t+"deg)",opacity:"0%"})}else e.removeAttr("style")})})})},new t}(),j.Login=function(){FB.login(null,{scope:"read_stream",return_scopes:!0})}});</script><input type="button" value="Login" onclick="j.Login(fbAsyncInit)"> <input type="button" value="Logout" onclick="FB.logout()"><div id="feed"></div><script>!function(e,t,n){var c,o=e.getElementsByTagName(t)[0];e.getElementById(n)||(c=e.createElement(t),c.id=n,c.src="http://connect.facebook.net/en_US/sdk.js",o.parentNode.insertBefore(c,o))}(document,"script","facebook-jssdk");</script><script id="template-status" type="text/x-handlebars-template">{{#if message}}
         <div class="feed-item status">
             <!-- We also have "story" objects but they are another story *bada-tshh* -->
             <!-- <div class="story">
@@ -179,11 +25,7 @@
                 </div> -->
             </div>
         </div>
-    {{/if}}
-</script>
-
-<script id="template-photo" type="text/x-handlebars-template">
-    <div class="feed-item photo">
+    {{/if}}</script><script id="template-photo" type="text/x-handlebars-template"><div class="feed-item photo">
         <div class="header">
             <div class="fbphoto from">
                 <img src="http://graph.facebook.com/{{ from.id }}/picture?type=square" />
@@ -207,11 +49,7 @@
         <div class="post-image">
             <img src="{{ picture }}" />
         </div>
-    </div>
-</script>
-
-<script id="template-link" type="text/x-handlebars-template">
-    <div class="feed-item link">
+    </div></script><script id="template-link" type="text/x-handlebars-template"><div class="feed-item link">
         <div class="header">
             <div class="fbphoto from">
                 <img src="http://graph.facebook.com/{{ from.id }}/picture?type=square" />
@@ -235,8 +73,4 @@
         <div class="post-image">
             <img src="{{ picture }}" />
         </div>
-    </div>
-</script>
-
-</body>
-</html>
+    </div></script></body></html>

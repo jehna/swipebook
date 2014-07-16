@@ -1,0 +1,4 @@
+
+Sitemap: https://miljoonavuilu.appspot.com/sitemap.xml
+Crawl-delay: 100
+Host: https://miljoonavuilu.appspot.com/
