@@ -35,24 +35,42 @@
             }
             
             SwipeBook.prototype.run = function() {
-                var self = this;
                 this.refresh();
-                FB.api('/me/home', 'get', {}, function(response) {
+                this.fetch(false, j.entries.most_recent);
+            };
+            
+            SwipeBook.prototype.fetch = function(next, since) {
+                var params = {
+                    limit: 3,
+                    since: Math.floor(since.getTime()/1000)
+                };
+                
+                var self = this;
+                var callback = function(response) {
+                    console.log(response);
                     response.data.forEach(function(entry) {
                         j.entries.Add(entry.id, entry);
                     });
                     self.refresh();
-                });
+                    if(response.data.length > 0) {
+                        self.fetch(response.paging.next, since);
+                    }
+                };
+                
+                if(!next) {
+                    FB.api('/me/home', 'get', params, callback);
+                } else {
+                    FB.api(next, 'get', {since: params.since}, callback);
+                }
             };
             
             SwipeBook.prototype.refresh = function() {
-                console.log("Jeeejee", j.entries);
                 j.entries.entries.forEach(function(entry) {
                     if(!entry) return;
                     if($("#" + entry.id).length !== 0) return;
                     
-                    console.log(entry);
-                    if( !j.templates[entry.type] ) return console.log(entry.type);
+                    //console.log(entry);
+                    if( !j.templates[entry.type] ) return;// console.log(entry.type);
                     
                     var $template = $("<div />").html(j.templates[entry.type](entry)).appendTo($("#feed")).addClass("composite").attr("id", entry.id);
                     
@@ -131,6 +149,9 @@
                         this.entries.push(entry);
                     }
                 }
+                this.Refresh();
+                var most_recent = localStorage.getItem("most_recent");
+                this.most_recent = most_recent ? new Date(most_recent) : new Date(new Date().getTime() - (1000*60*60*3));
             }
             
             Entries.prototype.Delete = function(id) {
@@ -141,12 +162,38 @@
                         return;
                     }
                 }
+                this.Refresh();
             };
+            
+            Entries.prototype.Refresh = function() {
+                this.entries.sort(function(x, y){
+                    if(!x && !y) return 0;
+                    if(!x) return -1;
+                    if(!y) return -1;
+                    
+                    if (new Date(x.updated_time) < new Date(y.updated_time)) {
+                        return -1;
+                    }
+                    if (new Date(x.updated_time) > new Date(y.updated_time)) {
+                        return 1;
+                    }
+                    return 0;
+                });
+            }
             
             Entries.prototype.Add = function(id, entry) {
                 if( localStorage.getItem("entry-" + id) !== null ) return;
                 this.entries.push(entry);
                 localStorage.setItem("entry-" + id, JSON.stringify(entry));
+                
+                if(entry.updated_time) {
+                    var entry_time = new Date(entry.updated_time);
+                    if( entry_time > this.most_recent ) {
+                        this.most_recent = entry_time;
+                        localStorage.setItem("most_recent", entry_time);
+                    }
+                }
+                this.Refresh();
             };
             
             

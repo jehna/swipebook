@@ -23,16 +23,22 @@ $(function() {
         }
         var b = [ "status", "photo", "link" ];
         return a.prototype.run = function() {
-            var a = this;
-            this.refresh(), FB.api("/me/home", "get", {}, function(b) {
-                b.data.forEach(function(a) {
+            this.refresh(), this.fetch(!1, j.entries.most_recent);
+        }, a.prototype.fetch = function(a, b) {
+            var c = {
+                limit: 3,
+                since: Math.floor(b.getTime() / 1e3)
+            }, d = this, e = function(a) {
+                console.log(a), a.data.forEach(function(a) {
                     j.entries.Add(a.id, a);
-                }), a.refresh();
-            });
+                }), d.refresh(), a.data.length > 0 && d.fetch(a.paging.next, b);
+            };
+            a ? FB.api(a, "get", {
+                since: c.since
+            }, e) : FB.api("/me/home", "get", c, e);
         }, a.prototype.refresh = function() {
-            console.log("Jeeejee", j.entries), j.entries.entries.forEach(function(a) {
-                if (a && 0 === $("#" + a.id).length) {
-                    if (console.log(a), !j.templates[a.type]) return console.log(a.type);
+            j.entries.entries.forEach(function(a) {
+                if (a && 0 === $("#" + a.id).length && j.templates[a.type]) {
                     var b = $("<div />").html(j.templates[a.type](a)).appendTo($("#feed")).addClass("composite").attr("id", a.id), c = 0, d = $(window).width(), e = 0, f = !1;
                     b.get(0).addEventListener("touchstart", function(a) {
                         f = !1, c = a.touches[0].clientX, b.removeClass("animateSwipe");
@@ -67,12 +73,21 @@ $(function() {
                 var b = JSON.parse(localStorage[a]);
                 this.entries.push(b);
             }
+            this.entries.sort(function(a, b) {
+                return a || b ? a && b ? new Date(a) < new Date(b) ? -1 : new Date(a) > new Date(b) ? 1 : 0 : -1 : 0;
+            });
+            var c = localStorage.getItem("most_recent");
+            this.most_recent = new Date(c ? c : new Date().getTime() - 108e5);
         }
         return a.prototype.Delete = function(a) {
             localStorage.setItem("entry-" + a, !1);
             for (var b in this.entries) if (this.entries[b].id == a) return void delete this.entries[b];
         }, a.prototype.Add = function(a, b) {
-            null === localStorage.getItem("entry-" + a) && (this.entries.push(b), localStorage.setItem("entry-" + a, JSON.stringify(b)));
+            if (null === localStorage.getItem("entry-" + a) && (this.entries.push(b), localStorage.setItem("entry-" + a, JSON.stringify(b)), 
+            b.updated_time)) {
+                var c = new Date(b.updated_time);
+                c > this.most_recent && (this.most_recent = c, localStorage.setItem("most_recent", c));
+            }
         }, new a();
     }();
 });
