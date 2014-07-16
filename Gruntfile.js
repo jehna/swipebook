@@ -6,7 +6,7 @@ module.exports = function(grunt) {
         less: {
             default: {
                 files: {
-                  "swipebook/css/style.css": "src/less/bootstrap.less"
+                  "swipebook/css/style.css": "src/less/style.less"
                 }
             }
         },

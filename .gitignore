@@ -1,2 +1,4 @@
 node_modules
 *.komodoproject
+swipebook/sitemap.xml
+swipebook/robots.txt
